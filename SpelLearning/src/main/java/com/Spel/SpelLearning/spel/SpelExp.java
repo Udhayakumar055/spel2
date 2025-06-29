@@ -24,10 +24,10 @@ public class SpelExp {
 
 
 	@PostMapping("/expression")
-	public ResponseEntity<ExpressionService> expression(@RequestBody ExpressionService service) {
+	public ResponseEntity<ExpressionService> expression(@RequestBody ExpressionService input) {
 
-	    StandardEvaluationContext context = new StandardEvaluationContext(service);
-	    ExpressionParser parser = new SpelExpressionParser();
+	     ExpressionParser parser = new SpelExpressionParser();
+	    StandardEvaluationContext context = new StandardEvaluationContext(input);
 
 		/*
 		 * Expression exp1 = parser.parseExpression("'Hello World'"); Object m1 =
@@ -47,32 +47,24 @@ public class SpelExp {
 		 */
 
 	    
-	    for (String expString : service.getExpression()) {
-	        Expression exp = parser.parseExpression(expString);
-	        exp.getValue(context);
-	        Object evaluatedValue = exp.getValue(context);
-		    
+	   for (String expStr : input.getExpression()) {
+	        Expression expression = parser.parseExpression(expStr);
+	        Object result = expression.getValue(context);
 
-		    
-		    if (expString.contains("age")) {
-		        if (evaluatedValue instanceof Integer) {
-		            parser.parseExpression("age").setValue(context, ((Integer) evaluatedValue).longValue());
-		        } else if (evaluatedValue instanceof Long) {
-		            parser.parseExpression("age").setValue(context, evaluatedValue);
-		        } else {
-		            throw new IllegalArgumentException("Expression result for age is not numeric");
-		        }
-		    } else if (expString.contains("name")) {
-		        parser.parseExpression("name").setValue(context, String.valueOf(evaluatedValue));
-		    } else if (expString.contains("address")) {
-		        parser.parseExpression("address").setValue(context, String.valueOf(evaluatedValue));
-		    } else {
-		        throw new IllegalArgumentException("Expression does not target a valid field (name, age, address)");
-		    }
+	        if (expStr.contains("name")) {
+	            input.setName(String.valueOf(result));
+	        } else if (expStr.contains("address")) {
+	            input.setAddress(String.valueOf(result));
+	        } else if (expStr.contains("age")) {
+	            if (result instanceof Integer) {
+	                input.setAge((Integer) result);
+	            } else if (result instanceof Long) {
+	                input.setAge(((Long) result).intValue());
+	            }
+	        }
 	    }
-	    
 
-	    return ResponseEntity.ok(service);
+	    return ResponseEntity.ok(input);
 	}
 
 
